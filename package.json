@@ -1,0 +1,24 @@
+{
+  "name": "quick_qr_scan",
+  "version": "0.1.0",
+  "description": "A browser extension to scan QR code on the page",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build:chrome": "node scripts/build-chrome.mjs",
+    "build:firefox": "node scripts/build-firefox.mjs",
+    "build": "npm run build:chrome && npm run build:firefox",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saivishnu725/quick_qr_scan.git"
+  },
+  "keywords": [],
+  "author": "theunconcernedape",
+  "license": "GPL-2.0-only",
+  "bugs": {
+    "url": "https://github.com/saivishnu725/quick_qr_scan/issues"
+  },
+  "homepage": "https://github.com/saivishnu725/quick_qr_scan#readme"
+}
