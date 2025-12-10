@@ -1,9 +1,9 @@
 body {
     margin: 0;
     padding: 12px;
-    font-family: Arial, sans-serif;
-    background: #f9f9f9;
-    color: #333;
+    font-family: system-ui, Arial, sans-serif;
+    background: #f7f7f7;
+    width: 280px;
 }
 
 h1 {
@@ -17,6 +17,26 @@ p {
     font-size: 14px;
 }
 
+#result-container {
+    margin-top: 6px;
+}
+
+#result {
+    margin: 4px 0 0 0;
+    font-size: 13px;
+    background: #fff;
+    padding: 6px;
+    border-radius: 6px;
+    max-height: 150px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+#buttons {
+    margin-top: 10px;
+}
+
 button {
     padding: 6px 10px;
     font-size: 14px;
@@ -27,6 +47,11 @@ button {
     color: white;
 }
 
-button:hover {
+button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+button:hover:not(:disabled) {
     background: #555;
 }

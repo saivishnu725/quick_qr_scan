@@ -11,7 +11,19 @@
 <body>
     <h1>Quick QR Scan</h1>
     <p id="status">Extension popup loaded successfully</p>
-    <button id="testBtn">Test button to see if JS works</button>
+
+    <div id="result-container">
+        <strong id="result-label" style="display: none;">Result:</strong>
+        <pre id="result"></pre>
+    </div>
+
+    <div id="buttons">
+        <button id="scanBtn">Scan visible area</button>
+    </div>
+
+    <!-- load jsQR -->
+    <script src="../lib/jsQR.js"></script>
+    <!-- load the login handler -->
     <script src="popup.js"></script>
 </body>
 
