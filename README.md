@@ -24,19 +24,19 @@ A browser extension to scan QR code on the page
 
 # roadmap
 
-[x] scan QR codes
+- [x] scan QR codes
 
-[ ] history of scanned texts + tab names
+- [ ] history of scanned texts + tab names
 
-[ ] select area to scan
+- [ ] select area to scan
 
-[ ] settings page
+- [ ] settings page
 
-[ ] multiple codes in one view
+- [ ] multiple codes in one view
 
-[ ] optimize (maybe)
+- [ ] optimize (maybe)
 
-[ ] more features if i think of anthing
+- [ ] more features if i think of anthing
 
 ## license
 
