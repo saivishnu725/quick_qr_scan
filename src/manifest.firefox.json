@@ -20,12 +20,13 @@
         "128": "icons/icon128.png"
     },
     "permissions": [
-        "tabs",
-        "activeTab"
+        "activeTab",
+        "storage",
+        "tabs"
     ],
     "browser_specific_settings": {
         "gecko": {
-            "id": "quick-qr-scan@example.com"
+            "id": "quick-qr-scan@svnu.me"
         }
     }
 }

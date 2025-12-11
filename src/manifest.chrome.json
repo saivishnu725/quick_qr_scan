@@ -20,7 +20,8 @@
         "128": "icons/icon128.png"
     },
     "permissions": [
-        "tabs",
-        "activeTab"
+        "activeTab",
+        "storage",
+        "tabs"
     ]
 }
