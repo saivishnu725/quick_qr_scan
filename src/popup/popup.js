@@ -1,3 +1,6 @@
+// TODO: deduplication logic to avoid adding same QR code multiple times in a row
+// TODO: option to clear history
+
 // cross browser compatibility
 const api = window.browser ?? window.chrome;
 
