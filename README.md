@@ -22,6 +22,11 @@ A browser extension to scan QR code on the page
    * `Chrome`: [chrome://extensions](chrome://extensions) → turn on *Developer Mode* (top right) → Load unpacked → *path_to_repo/dist/chrome/manifest.json*
    * `Firefox`: [about:debugging#/runtime/this-firefox](about:debugging#/runtime/this-firefox) → “Load Temporary Add-on…” → select any file in *path_to_repo/dist/firefox*
 
+
+# test qr code
+
+![Sample QR Code](sample_QR_code.png)
+
 # roadmap
 
 - [x] scan QR codes
