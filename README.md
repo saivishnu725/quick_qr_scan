@@ -31,7 +31,7 @@ A browser extension to scan QR code on the page
 
 - [x] scan QR codes
 
-- [ ] history of scanned texts + tab names
+- [x] history of scanned texts + tab names
 
 - [ ] select area to scan
 
