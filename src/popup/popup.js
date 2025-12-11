@@ -13,6 +13,7 @@ const historyListEl = document.getElementById("history-list");
 // in-memory history for this popup instance only
 const scanHistory = [];
 
+const STORAGE_KEY = "quick_qr_history_v1";
 console.log("Quick QR Scan popup loaded");
 
 // --- Event listeners ---
@@ -37,55 +38,111 @@ historyListEl.addEventListener("click", (event) => {
     if (index !== -1) {
         scanHistory.splice(index, 1);
         renderHistory();
+        saveHistoryToStorage();
     }
 });
 
-// --- Helper functions ---
+// --- Storage helpers (cross-browser callback+promise support) ---
 
-async function captureVisibleTabAsDataUrl() {
-    return new Promise((resolve, reject) => {
+function storageGet(key, defaultValue = null) {
+    // Prefer Promise-style browser API when available
+    if (window.browser && browser.storage && browser.storage.local && typeof browser.storage.local.get === "function") {
+        return browser.storage.local.get(key).then((res) => {
+            return (res && Object.prototype.hasOwnProperty.call(res, key)) ? res[key] : defaultValue;
+        }).catch(() => defaultValue);
+    }
+
+    // Fallback to chrome callback-style
+    return new Promise((resolve) => {
         try {
-            api.tabs.captureVisibleTab(
-                null,
-                { format: "png" },
-                (dataUrl) => {
-                    // chrome: lastError via runtime
-                    const lastError =
-                        (api.runtime && api.runtime.lastError) ||
-                        (api.runtime && api.runtime.lasterror); // paranoia
-
-                    if (lastError) {
-                        return reject(new Error(lastError.message));
-                    }
-                    if (!dataUrl) {
-                        return reject(new Error("Failed to capture visible tab."));
-                    }
-                    resolve(dataUrl);
+            api.storage.local.get(key, (res) => {
+                const lastErr = api.runtime && api.runtime.lastError;
+                if (lastErr) {
+                    console.warn("storage.get error:", lastErr);
+                    resolve(defaultValue);
+                    return;
                 }
-            );
-        } catch (err) {
-            reject(err);
+                resolve((res && Object.prototype.hasOwnProperty.call(res, key)) ? res[key] : defaultValue);
+            });
+        } catch (e) {
+            console.warn("storage.get threw:", e);
+            resolve(defaultValue);
         }
     });
 }
 
-async function getActiveTab() {
-    return new Promise((resolve, reject) => {
+function storageSet(obj) {
+    if (window.browser && browser.storage && browser.storage.local && typeof browser.storage.local.set === "function") {
+        return browser.storage.local.set(obj).catch((e) => {
+            console.warn("storage.set failed:", e);
+        });
+    }
+
+    return new Promise((resolve) => {
         try {
-            api.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                const lastError = api.runtime && api.runtime.lastError;
-                if (lastError) {
-                    return reject(new Error(lastError.message));
+            api.storage.local.set(obj, () => {
+                const lastErr = api.runtime && api.runtime.lastError;
+                if (lastErr) {
+                    console.warn("storage.set error:", lastErr);
                 }
-                if (!tabs || tabs.length === 0) {
-                    return resolve(null);
-                }
-                resolve(tabs[0]);
+                resolve();
             });
-        } catch (err) {
-            reject(err);
+        } catch (e) {
+            console.warn("storage.set threw:", e);
+            resolve();
         }
     });
+}
+
+// --- Helper functions ---
+
+async function loadHistoryFromStorage() {
+    try {
+        const val = await storageGet(STORAGE_KEY, []);
+        if (Array.isArray(val)) {
+            // Convert stored timestamps back to Date objects if necessary
+            scanHistory.length = 0;
+            for (const item of val) {
+                // item.timestamp may be ISO string or a Date; normalize to Date
+                let ts = item.timestamp;
+                if (typeof ts === "string") {
+                    try {
+                        ts = new Date(ts);
+                    } catch {
+                        ts = new Date();
+                    }
+                } else if (!(ts instanceof Date)) {
+                    ts = new Date();
+                }
+                scanHistory.push({
+                    id: item.id,
+                    text: item.text,
+                    tabTitle: item.tabTitle,
+                    tabUrl: item.tabUrl,
+                    timestamp: ts
+                });
+            }
+        }
+    } catch (err) {
+        console.warn("Failed to load history from storage:", err);
+    }
+    renderHistory();
+}
+
+async function saveHistoryToStorage() {
+    try {
+        // Prepare a serializable copy (convert Date -> ISO string)
+        const serial = scanHistory.map((it) => ({
+            id: it.id,
+            text: it.text,
+            tabTitle: it.tabTitle,
+            tabUrl: it.tabUrl,
+            timestamp: (it.timestamp instanceof Date) ? it.timestamp.toISOString() : new Date().toISOString()
+        }));
+        await storageSet({ [STORAGE_KEY]: serial });
+    } catch (err) {
+        console.warn("Failed to save history to storage:", err);
+    }
 }
 
 function addToHistory({ text, tabTitle, tabUrl }) {
@@ -106,6 +163,7 @@ function addToHistory({ text, tabTitle, tabUrl }) {
     }
 
     renderHistory();
+    saveHistoryToStorage();
 }
 
 function renderHistory() {
@@ -156,13 +214,64 @@ function renderHistory() {
 
 function formatTime(date) {
     try {
-        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        // Accept Date object or ISO string
+        let d = date;
+        if (!(d instanceof Date)) {
+            d = new Date(d);
+        }
+        return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     } catch {
         return "";
     }
 }
 
 // --- Main scan function ---
+
+async function captureVisibleTabAsDataUrl() {
+    return new Promise((resolve, reject) => {
+        try {
+            api.tabs.captureVisibleTab(
+                null,
+                { format: "png" },
+                (dataUrl) => {
+                    // chrome: lastError via runtime
+                    const lastError =
+                        (api.runtime && api.runtime.lastError) ||
+                        (api.runtime && api.runtime.lasterror); // paranoia
+
+                    if (lastError) {
+                        return reject(new Error(lastError.message));
+                    }
+                    if (!dataUrl) {
+                        return reject(new Error("Failed to capture visible tab."));
+                    }
+                    resolve(dataUrl);
+                }
+            );
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
+
+async function getActiveTab() {
+    return new Promise((resolve, reject) => {
+        try {
+            api.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                const lastError = api.runtime && api.runtime.lastError;
+                if (lastError) {
+                    return reject(new Error(lastError.message));
+                }
+                if (!tabs || tabs.length === 0) {
+                    return resolve(null);
+                }
+                resolve(tabs[0]);
+            });
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
 
 async function scanVisibleAreaForQr() {
     scanBtn.disabled = true;
@@ -245,3 +354,8 @@ async function scanVisibleAreaForQr() {
 
     img.src = dataUrl;
 }
+
+// --- Init: load stored history on popup open ---
+(async function init() {
+    await loadHistoryFromStorage();
+})();
